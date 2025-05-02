@@ -14,16 +14,26 @@ struct tarefa{
 };
 typedef struct tarefa tarefa;
 
+FILE *tarefas;
 
 int resposibles_number = 1;
 char responsible[24] = "";
 //Registar uma nova tarefa
 void register_new_task(tarefa *task){
+    tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "r");
+
+    //TODO: substitute strcpy to insert data into the file
+
+    fseek(tarefas, 0,EOF);
+
     //name
     char responsibles[10][10];
     printf("\nPlease give the task a name\n");
     //scanf("%s", task.name);
     strcpy(task->name, "test name");
+    fputs(task->name, tarefas);
+
+    fputs(";", tarefas);
 
     printf("\nplease list how many resposibles there are\n"); //TODO: change this for file format for teams and stuff
     //scanf("%d", &resposibles_number);
@@ -46,6 +56,8 @@ void register_new_task(tarefa *task){
     printf("\nPlease write a small description of the task\n");
     //scanf("%s", &task->description);
     strcpy(task->description, "descirption");
+
+    fclose(tarefas);
 }
 
 void change_data(tarefa *task){ //modify "data limite de execusao" "O responsavel" ou a "descicao"
