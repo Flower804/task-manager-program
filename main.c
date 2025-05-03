@@ -28,7 +28,7 @@ void register_new_task(tarefa *task){
 
     //TODO: substitute strcpy to insert data into the file
 
-    fseek(tarefas, 0,EOF);
+    //fseek(tarefas, 0,EOF);
 
     //name
 
@@ -194,8 +194,9 @@ void criar_equipas(){
     fputs(buffer, file);
 
     for(int i = 0; i < numero_de_membros; i++){
-        char name;
+        char name[16];
         printf("please insert the number of your member");
+        scanf("%s", name);
         fputs(name, file);
     }
 }
