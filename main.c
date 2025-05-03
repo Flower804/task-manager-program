@@ -147,13 +147,11 @@ void eliminate_task(int delete_line){
     while (ch != EOF){
         ch = getc(fileptr1);
         //except the line to be deleted
-        if (temp != delete_line)
-        {
+        if (temp != delete_line){
             //copy all lines in file replica.c
             putc(ch, fileptr2);
         }
-        if (ch == '\n')
-        {
+        if (ch == '\n'){
             temp++;
         }
     }
@@ -172,12 +170,42 @@ void eliminate_task(int delete_line){
     fclose(fileptr1);
 }
 
+//PESSOAS E EQUIPAS
+void criar_equipas(){
+    FILE *file;
+
+    file = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\output\\teams.txt", "a");
+    fputs("\n", file);
+    fputs("Equipa", file);
+    char ch;
+    int numero_de_membros, lines;
+    
+    printf("Please indicate how many memebres there are on the team");
+    scanf("%d", &numero_de_membros);
+
+    while(!feof(file)){
+      ch = fgetc(file);
+      if(ch == '\n'){
+        lines++;
+      }
+    }
+    char buffer[40];
+    sprintf(buffer, "%d", lines);
+    fputs(buffer, file);
+
+    for(int i = 0; i < numero_de_membros; i++){
+        char name;
+        printf("please insert the number of your member");
+        fputs(name, file);
+    }
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
     while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\n\t 6-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\n\t8-stop process");
         scanf("%d", &choice);
 
         switch(choice){
@@ -195,6 +223,9 @@ int main(){
                 eliminate_task(line);
                 break;
             case(6):
+                criar_equipas();
+                break;
+            case(8):
                 return 1;
                 break;
         }
