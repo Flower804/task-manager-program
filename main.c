@@ -25,10 +25,6 @@ int resposibles_number = 1;
 char responsible[24] = "";
 //Registar uma nova tarefa
 void register_new_task(tarefa *task){
-    tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "a");
-
-    //Start new line in file
-    fputs("\n", tarefas);
 
     //TODO: substitute strcpy to insert data into the file
 
@@ -87,6 +83,9 @@ void register_new_task(tarefa *task){
 }
 
 void change_data(tarefa *task){ //modify "data limite de execusao" "O responsavel" ou a "descicao"
+
+    tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "a");
+
     bool loop = true;
     while(loop){
         int choice;
@@ -127,6 +126,52 @@ void change_data(tarefa *task){ //modify "data limite de execusao" "O responsave
     }
 }
 
+void eliminate_task(int delete_line){
+    FILE *fileptr1, *fileptr2;
+    char filename[40] = "tarefas.csv";
+    char ch;
+    int temp = 1;
+
+    //open file in read mode
+    fileptr1 = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "r");
+    ch = getc(fileptr1);
+   while (ch != EOF){
+        printf("%c", ch);
+        ch = getc(fileptr1);
+    }
+    //rewind
+    rewind(fileptr1);
+    //open new file in write mode
+    fileptr2 = fopen("replica.c", "w");
+    ch = 'A';
+    while (ch != EOF){
+        ch = getc(fileptr1);
+        //except the line to be deleted
+        if (temp != delete_line)
+        {
+            //copy all lines in file replica.c
+            putc(ch, fileptr2);
+        }
+        if (ch == '\n')
+        {
+            temp++;
+        }
+    }
+    fclose(fileptr1);
+    fclose(fileptr2);
+    remove(filename);
+    //rename the file replica.c to original name
+    rename("replica.c", filename);
+    printf("\n The contents of file after being modified are as follows:\n");
+    fileptr1 = fopen(filename, "r");
+    ch = getc(fileptr1);
+    while (ch != EOF){
+        printf("%c", ch);
+        ch = getc(fileptr1);
+    }
+    fclose(fileptr1);
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
@@ -141,6 +186,13 @@ int main(){
                 break;
             case(2): //Alterate task's data
                 change_data(&current_task);
+                break;
+            case(5):
+                printf("\nwhat tarefa do you want to delete?\n");
+                int line;
+                scanf("%d", &line);
+
+                eliminate_task(line);
                 break;
             case(6):
                 return 1;
