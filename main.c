@@ -54,6 +54,15 @@ int separate_float(int original_number, int objective){ //meaning objectives 1 -
     }
 }
 
+int float_to_days(int days, int months, int year){ //returnts tottal of days
+    int total_days;
+    total_days = year*365;
+    total_days = total_days + months*31;
+    total_days = total_days + days;
+
+    return total_days;
+}
+
 void write_file(tarefa *task){
     tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "a");
 
@@ -355,15 +364,11 @@ void list_concluded(tarefa *task){
             if(i == 6){
                 int first_duration, second_duration;
                 float creation_date = strtof(cells[2], NULL);
-                first_duration = separate_float(creation_date, 3)*365; //pass year of first date to days
-                first_duration = first_duration + separate_float(creation_date, 2)*31; //get days by months
-                first_duration = first_duration + separate_float(creation_date, 1);
+                first_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
 
                 float end_date = strtof(cells[4], NULL);
-                second_duration = separate_float(end_date, 3)*365; //pass
-                second_duration = second_duration + separate_float(end_date, 2)*31;
-                second_duration = second_duration + separate_float(end_date, 1);
-                
+                second_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
                 printf("Tarefa: %s | Duracao: %d\n", cells[0], (second_duration - first_duration));
             } else {
                 printf("no cells found error");
@@ -396,12 +401,20 @@ void exceed_limit(tarefa *task){
                 divisor = strtok(NULL, ";");
             }
             float todays_date;
-            printf("por favor insira a data de hoje");
-            scanf("%s", todays_date);
+            printf("por favor insira a data de hoje no formato ddmmaaaa");
+            scanf("%f", &todays_date);
 
             if(i == 6){
-                if(strtof(cells[3], NULL) > todays_date){
-                    printf("Tarefa: %s superado: %f", cells[0], cells[2]);
+                float creation_date = strtof(cells[2], NULL);
+                int creation_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+
+                float limit_date = strtof(cells[3], NULL);
+                int limit_duration = float_to_days(separate_float(limit_date, 1), separate_float(limit_date, 2), separate_float(limit_date, 3));
+
+                if(limit_duration > creation_duration){
+                    int today_duration = float_to_days(separate_float(todays_date, 1), separate_float(todays_date, 2), separate_float(todays_date, 3));
+
+                    printf("Tarefa: %s superado: %d", cells[0], today_duration - limit_duration);
                 }
             } else {
                 printf("no cells found error");
@@ -416,7 +429,7 @@ int main(){
     struct tarefa current_task;
     //while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
@@ -455,6 +468,9 @@ int main(){
                 list_concluded(&current_task);
                 break;
             case(10):
+                exceed_limit(&current_task);
+                break;
+            case(11):
                 return 1;
                 break;
         }
