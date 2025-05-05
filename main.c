@@ -288,7 +288,7 @@ void list_execution(tarefa *task){
             }
 
             if(i == 6){
-                printf("first: %s | middle: %s\n", cells[0], cells[2]);
+                printf("nome de tarefa: %s | inicio: %s\n", cells[0], cells[2]);
             } else {
                 printf("no cells found error");
             }
@@ -305,14 +305,49 @@ void list_execution(tarefa *task){
         //    printf("data de inicio: %s\n", creation_date);
         //}
     }
+    fclose(file);
 }
+
+void list_concluded(tarefa *task){
+    FILE *file;
+    
+    file = fopen("tarefas.csv", "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    char line[1024];
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                printf("Tarefa: %s | Duracao: %s\n", cells[0], cells[4]);
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+    fclose(file);
+} 
+
 
 int choice;
 int main(){
     struct tarefa current_task;
     //while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\n\t8-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-stop process");
         scanf("%d", &choice);
 
         switch(choice){
@@ -345,6 +380,9 @@ int main(){
                 list_execution(&current_task);
                 break;
             case(9):
+                list_concluded(&current_task);
+                break;
+            case(10):
                 return 1;
                 break;
         }
