@@ -40,6 +40,20 @@ int data_dias(data d){
 
 FILE *tarefas;
 
+//TODO:simplify this :ass: FLower
+int separate_float(int original_number, int objective){ //meaning objectives 1 -> days 2-> months 3-> years
+    int dia = (original_number/1000000);
+    int mes = (original_number/10000) % 100;
+    int ano = original_number % 10000;
+    if(objective == 1){ 
+        return dia;
+    } else if(objective == 2){
+        return mes;
+    } else { //assume 3
+        return ano;
+    }
+}
+
 void write_file(tarefa *task){
     tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "a");
 
@@ -51,6 +65,8 @@ void write_file(tarefa *task){
     //write task name
     fputs(task->name, tarefas);
     fputs(";", tarefas); //end section
+
+    //TODO: idk if this is importante so I won't erase it just yet :ass: Flower
 
     //write responsibles
     //if(task->responsibles != *1){  //in case of multiple responsibles
@@ -68,7 +84,7 @@ void write_file(tarefa *task){
     sprintf(buffer, "%0.0f", task->creation_date);
     fputs(buffer, tarefas);
     fputs(";", tarefas);
-
+    
     //write limit date
     sprintf(buffer, "%0.0f", task->lim_date);
     fputs(buffer, tarefas);
@@ -93,6 +109,7 @@ int resposibles_number = 1;
 char responsible[24] = "";
 //Registar uma nova tarefa
 void register_new_task(tarefa *task){
+    data d;
     //name
 
     printf("\nPlease give the task a name\n");
@@ -113,14 +130,9 @@ void register_new_task(tarefa *task){
         //strcpy(task->responsibles[i], responsible);
     }
 
-
-    printf("\por favor insira a data atual\n");
-    //scanf("%f", &task->creation_date);
-    task->creation_date = le_data();
-
     printf("\npor favor insira a data limite:\n");
     //scanf("%f", &task->lim_date);
-    task->lim_date = le_data();
+    //task->lim_date = le_data();
     
     task->conclusion_date = 0;
 
@@ -341,7 +353,18 @@ void list_concluded(tarefa *task){
             }
 
             if(i == 6){
-                printf("Tarefa: %s | Duracao: %0.0f\n", cells[0], (strtof(cells[2], NULL) - strtof(cells[4], NULL)));
+                int first_duration, second_duration;
+                float creation_date = strtof(cells[2], NULL);
+                first_duration = separate_float(creation_date, 3)*365; //pass year of first date to days
+                first_duration = first_duration + separate_float(creation_date, 2)*31; //get days by months
+                first_duration = first_duration + separate_float(creation_date, 1);
+
+                float end_date = strtof(cells[4], NULL);
+                second_duration = separate_float(end_date, 3)*365; //pass
+                second_duration = second_duration + separate_float(end_date, 2)*31;
+                second_duration = second_duration + separate_float(end_date, 1);
+                
+                printf("Tarefa: %s | Duracao: %d\n", cells[0], (second_duration - first_duration));
             } else {
                 printf("no cells found error");
             }
@@ -395,6 +418,9 @@ int main(){
         printf("what action do you pretend to execute");
         printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-stop process");
         scanf("%d", &choice);
+
+        //TODO: remove this, only here for debug purposses
+        //separate_float(16092006);
 
         switch(choice){
             case(1): //Register and create a new task
