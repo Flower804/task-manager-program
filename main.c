@@ -293,17 +293,6 @@ void list_execution(tarefa *task){
                 printf("no cells found error");
             }
         }
-        //char *name = strtok(line, ";");
-        //char *responsible = strtok(NULL, ";");
-        //char *creation_date = strtok(NULL, ";");
-        //char *lim_date = strtok(NULL, ";");
-        //char *conclusion_date = strtok(NULL, ";");
-        //char *description = strtok(NULL, ";");
-//
-        //if(strcmp(conclusion_date, "on-going") == 0){
-        //    printf("tarefa: %s\n", name);
-        //    printf("data de inicio: %s\n", creation_date);
-        //}
     }
     fclose(file);
 }
@@ -332,14 +321,51 @@ void list_concluded(tarefa *task){
             }
 
             if(i == 6){
-                printf("Tarefa: %s | Duracao: %s\n", cells[0], cells[4]);
+                printf("Tarefa: %s | Duracao: %0.0f\n", cells[0], (strtof(cells[2], NULL) - strtof(cells[4], NULL)));
             } else {
                 printf("no cells found error");
             }
         }
     }
     fclose(file);
-} 
+}
+
+void exceed_limit(tarefa *task){
+    FILE *file;
+
+    file = fopen("tarefas.csv", "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    char line[1024];
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+            float todays_date;
+            printf("por favor insira a data de hoje");
+            scanf("%s", todays_date);
+
+            if(i == 6){
+                if(strtof(cells[3], NULL) > todays_date){
+                    printf("Tarefa: %s superado: %f", cells[0], cells[2]);
+                }
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+}
 
 
 int choice;
@@ -386,14 +412,4 @@ int main(){
                 return 1;
                 break;
         }
-
-        //printf("%s \n", current_task.name);
-        //for(int i = 0; i < resposibles_number; i++) {
-        //    printf("Responsible #%d: %s\n", i + 1, current_task.responsibles[i]);
-        //}
-        //printf("%0.0f\n", current_task.creation_date);
-        //printf("%0.0f\n", current_task.lim_date);
-        //printf("%0.0f\n", current_task.conclusion_date);
-        //printf("%s", current_task.description);
-    //}
 }
