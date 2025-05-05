@@ -423,6 +423,45 @@ void exceed_limit(tarefa *task){
     }
 }
 
+void concluded_after(){
+    FILE *file;
+
+    file = fopen("tarefas.csv", "r");   
+    if(!file){
+        printf("erro: file not found");
+        return;
+    }
+
+    char line[1024];
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+            if(i == 6){
+                float end_date = strtof(cells[4], NULL);
+                int concluded_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                float limit_date = strtof(cells[3], NULL);
+                int limit_duration = float_to_days(separate_float(limit_date, 1), separate_float(limit_date, 2), separate_float(limit_date, 3));
+
+                if(limit_duration < concluded_duration){
+                    printf("Tareda: %s | tempo excedido: %d \n", cells[0], concluded_duration - limit_duration);
+                } else {
+                    printf("no cells found error\n");
+                }
+            }
+        }
+    }
+}
+
 
 int choice;
 int main(){
@@ -471,6 +510,9 @@ int main(){
                 exceed_limit(&current_task);
                 break;
             case(11):
+                concluded_after();
+                break;
+            case(12):
                 return 1;
                 break;
         }
