@@ -33,15 +33,15 @@ void write_file(tarefa *task){
     fputs(";", tarefas); //end section
 
     //write responsibles
-    if(task->responsibles != *1){  //in case of multiple responsibles
-        char team = strcat("Equipa", task->team);
-        
-        fputs(team, tarefas);
-    }
-    for(int i = 0; i < resposibles_number; i++){
-        fputs(task->responsibles[i], tarefas);
-        fputs(", ", tarefas);
-    }
+    //if(task->responsibles != *1){  //in case of multiple responsibles
+    //    char team = strcat("Equipa", task->team);
+    //    
+    //    fputs(team, tarefas);
+    //}
+    //for(int i = 0; i < resposibles_number; i++){
+    //    fputs(task->responsibles[i], tarefas);
+    //    fputs(", ", tarefas);
+    //}
     fputs(";", tarefas);
 
     //write creation date
@@ -50,12 +50,12 @@ void write_file(tarefa *task){
     fputs(";", tarefas);
 
     //write limit date
-    spintf(buffer, "%0.0f", task->lim_date);
+    sprintf(buffer, "%0.0f", task->lim_date);
     fputs(buffer, tarefas);
     fputs(";", tarefas);
 
     if(task->conclusion_date != 0){
-        spintf(buffer, "%0.0f", task->conclusion_date);
+        sprintf(buffer, "%0.0f", task->conclusion_date);
         fputs(buffer, tarefas);
     } else {
         fputs("on-going", tarefas);
@@ -102,7 +102,7 @@ void register_new_task(tarefa *task){
     //scanf("%f", &task->lim_date);
     task->lim_date = 20250431;
     
-    task->lim_date = 0;
+    task->conclusion_date = 0;
 
     printf("\nPlease write a small description of the task\n");
     //scanf("%s", &task->description);
@@ -266,21 +266,51 @@ void alocar_equipa(){
 //LISTS
 void list_execution(tarefa *task){
     FILE *file;
-
+    
     file = fopen("tarefas.csv", "r");
-    char line[265];
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
 
+    char line[1024];
     while(fgets(line, sizeof(line), file)){
-        if(strchr(line, 'on-going') != NULL){
-            printf("%s", line);
+        line[strcspn(line, "\n")] = 0;
+
+        if(strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                printf("first: %s | middle: %s\n", cells[0], cells[2]);
+            } else {
+                printf("no cells found error");
+            }
         }
+        //char *name = strtok(line, ";");
+        //char *responsible = strtok(NULL, ";");
+        //char *creation_date = strtok(NULL, ";");
+        //char *lim_date = strtok(NULL, ";");
+        //char *conclusion_date = strtok(NULL, ";");
+        //char *description = strtok(NULL, ";");
+//
+        //if(strcmp(conclusion_date, "on-going") == 0){
+        //    printf("tarefa: %s\n", name);
+        //    printf("data de inicio: %s\n", creation_date);
+        //}
     }
 }
 
 int choice;
 int main(){
     struct tarefa current_task;
-    while(1){
+    //while(1){
         printf("what action do you pretend to execute");
         printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\n\t8-stop process");
         scanf("%d", &choice);
@@ -312,17 +342,20 @@ int main(){
                 alocar_equipa();
                 break;
             case(8):
+                list_execution(&current_task);
+                break;
+            case(9):
                 return 1;
                 break;
         }
 
-        printf("%s \n", current_task.name);
-        for(int i = 0; i < resposibles_number; i++) {
-            printf("Responsible #%d: %s\n", i + 1, current_task.responsibles[i]);
-        }
-        printf("%0.0f\n", current_task.creation_date);
-        printf("%0.0f\n", current_task.lim_date);
-        printf("%0.0f\n", current_task.conclusion_date);
-        printf("%s", current_task.description);
-    }
+        //printf("%s \n", current_task.name);
+        //for(int i = 0; i < resposibles_number; i++) {
+        //    printf("Responsible #%d: %s\n", i + 1, current_task.responsibles[i]);
+        //}
+        //printf("%0.0f\n", current_task.creation_date);
+        //printf("%0.0f\n", current_task.lim_date);
+        //printf("%0.0f\n", current_task.conclusion_date);
+        //printf("%s", current_task.description);
+    //}
 }
