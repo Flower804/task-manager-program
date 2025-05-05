@@ -18,6 +18,26 @@ struct tarefa{
 };
 typedef struct tarefa tarefa;
 
+
+struct data{
+    int ano, mes, dia;
+};
+typedef struct data data;
+
+data le_data(){
+    data d;
+    printf("Insira a data no formato dd-mm-aaaa: ");
+    scanf("%d-%d-%d", &d.dia, &d.mes, &d.ano);
+    return d;
+
+}
+
+int data_dias(data d){
+    int dias;
+    dias= d.ano*365 + d.mes*30 + d.dia;  
+    return dias;
+}
+
 FILE *tarefas;
 
 void write_file(tarefa *task){
@@ -94,13 +114,13 @@ void register_new_task(tarefa *task){
     }
 
 
-    printf("\nplease inserts today's date in the format yyyymmdd\n");
+    printf("\por favor insira a data atual\n");
     //scanf("%f", &task->creation_date);
-    task->creation_date = 20250430;
+    task->creation_date = le_data();
 
-    printf("\nplease insert the limit date in the format yyyymmdd\n");
+    printf("\npor favor insira a data limite:\n");
     //scanf("%f", &task->lim_date);
-    task->lim_date = 20250431;
+    task->lim_date = le_data();
     
     task->conclusion_date = 0;
 
