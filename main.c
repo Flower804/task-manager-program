@@ -512,7 +512,7 @@ void search_task_by_team(){
         }
     }
     printf("%s\n", defined_team);
-    char second_search[10246];
+    char second_search[1024];
     int matches = 0;
     while(fgets(second_search, sizeof(second_search), file)){
         second_search[strcspn(second_search, "\n")] = 0;
@@ -626,12 +626,81 @@ void order_by_urgency(){
 
 }
 
+void average_duration(){
+    FILE *file, *teams;
+
+    file = fopen("tarefas.csv", "r");
+    teams = fopen("output/teams.txt", "r");
+
+    int choice;
+    if((file == NULL) || (teams == NULL)){
+        printf("Sorry an error ocurred opening the files");
+        return;
+    }
+
+    char ch;
+    while((ch = fgetc(teams)) != EOF){
+        putchar(ch);
+    }
+    printf("\nPor favor escolha que equipa pertende verificar o media de tempo\n");
+    scanf("%d", &choice);
+
+    char line[256];
+    char defined_team[50];
+    int count = 0;
+    rewind(teams);
+    while(fgets(line, sizeof(line), teams) != NULL){
+        if(count == (choice - 1)){
+            strcpy(defined_team, line);
+            defined_team[strcspn(defined_team, "\n")] = 0;
+            break;
+        } else {
+            count++;
+        }
+    }
+
+    char second_search[1024];
+    int matches = 0;
+    int duration = 0;
+    while(fgets(second_search, sizeof(second_search), file) != NULL){
+        second_search[strcspn(second_search, "\n")] = 0;
+
+        if(strstr(second_search, defined_team) && !strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(second_search, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                matches++;
+                float creation_date = strtof(cells[2], NULL);
+                int creation_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+
+                float end_date = strtof(cells[4], NULL);
+                int concluded_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                duration = duration + (concluded_duration - creation_duration); 
+            } else {
+                printf("line malformed \n");
+            }
+        }
+    } 
+    if(matches != 0){
+        float average_duration = duration/matches;
+        printf("A equipa %s , tem uma media de duracao de tarefa de %0.2f", defined_team, average_duration);
+    }
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
     //while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\n\t14-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\ndeterminar por equipas\n\t14-a duracao media de tarefas\n\t15-numero de tarefas concluidas\n\t16-numero de tarefas em execusao\n\t17-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
@@ -682,6 +751,9 @@ int main(){
                 order_by_urgency();
                 break;
             case(14):
+                average_duration();
+                break;
+            case(17):
                 return 1;
                 break;
         }
