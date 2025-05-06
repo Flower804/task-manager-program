@@ -40,6 +40,23 @@ int data_dias(data d){
 
 FILE *tarefas;
 
+//bubble sort stuff
+void swap(int *arr, int i, int j){
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
+
+void bubbleSort(int arr[], int n) {
+    for(int i = 0; i < n - 1; i++){
+        for(int j = 0; j < n - i - 1; j++){
+            if(arr[j] > arr[j + 1]){
+                swap(arr, j, j + 1);
+            }
+        }
+    }
+}
+
 //TODO:simplify this :ass: FLower
 int separate_float(int original_number, int objective){ //meaning objectives 1 -> days 2-> months 3-> years
     int dia = (original_number/1000000);
@@ -525,12 +542,96 @@ void search_task_by_team(){
     fclose(teams);
 }
 
+// problem 4 ordenation
+void order_by_urgency(){
+    FILE *file;
+
+    file = fopen("tarefas.csv", "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    int lines_in_file = 1;
+    char ch;
+    while(!feof(file)){
+        ch = fgetc(file);
+        if(ch == '\n'){
+            lines_in_file++;
+        }
+    }
+
+    printf("%d", lines_in_file);
+    int j = 0;
+    char tasks[lines_in_file][256];
+    int durations[lines_in_file];
+
+    rewind(file);
+
+    char line[1024];
+    float todays_date;
+    printf("por favor insira a data de hoje no formato ddmmaaaa");
+    scanf("%f", &todays_date);
+
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                strcpy(tasks[j], cells[0]);
+                int today_duration = float_to_days(separate_float(todays_date, 1), separate_float(todays_date, 2), separate_float(todays_date, 3));
+
+                float limit_date = strtof(cells[3], NULL);
+                int limit_duration = float_to_days(separate_float(limit_date, 1), separate_float(limit_date, 2), separate_float(limit_date, 3));
+
+                int duration = limit_duration - today_duration;
+                durations[i] = duration;
+                //printf("%d ", duration);
+
+
+            } else {
+                printf("cell malformation");
+            }
+        }
+        j++;
+    }
+    int copy_durations[lines_in_file];
+    for(int i = 0; i < lines_in_file; i++){
+        durations[i] = copy_durations[i];    
+    }
+    bubbleSort(durations, lines_in_file);
+
+    int pointer;
+    for(int i = 0; i < lines_in_file; i++){
+        printf("%d | ", durations[i]);    
+    }
+    printf("\n");
+    for(int i = 0; i < lines_in_file; i++){
+        for(int j = 0; j < lines_in_file; j++){
+            if(durations[i] == copy_durations[j]){
+                copy_durations[j] = 0;
+                printf("%s | ", tasks[j]);
+            }
+        }
+    }
+
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
     //while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t13-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\n\t14-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
@@ -578,6 +679,9 @@ int main(){
                 search_task_by_team();
                 break;
             case(13):
+                order_by_urgency();
+                break;
+            case(14):
                 return 1;
                 break;
         }
