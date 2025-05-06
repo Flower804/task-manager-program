@@ -764,6 +764,80 @@ void number_of_tasks_online_vs_offline(){
     }
 }
 
+void tasks_on_exec(){
+    FILE *file, *teams;
+
+    file = fopen("tarefas.csv", "r");
+    teams = fopen("output/teams.txt", "r");
+
+    int choice;
+    if((file == NULL) || (teams == NULL)){
+        printf("Sorry an error ocurred opening the files");
+        return;
+    }
+
+    char ch;
+    while((ch = fgetc(teams)) != EOF){
+        putchar(ch);
+    }
+    printf("\nPor favor escolha que equipa pertende verificar o media de tempo\n");
+    scanf("%d", &choice);
+
+    char line[256];
+    char defined_team[50];
+    int count = 0;
+    rewind(teams);
+    while(fgets(line, sizeof(line), teams) != NULL){
+        if(count == (choice - 1)){
+            strcpy(defined_team, line);
+            defined_team[strcspn(defined_team, "\n")] = 0;
+            break;
+        } else {
+            count++;
+        }
+    }
+
+    float todays_date;
+    printf("Por favor insira a data de hoje no formate ddmmaaaa");
+    scanf("%f", &todays_date);
+
+    char second_search[1024];
+    int matches = 0;
+    int duration[124];
+    while(fgets(second_search, sizeof(second_search), file) != NULL){
+        second_search[strcspn(second_search, "\n")] = 0;
+
+        if(strstr(second_search, defined_team) && strstr(second_search, "on-going")){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(second_search, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+            if(i == 6){
+                float creation_date = strtof(cells[2], NULL);
+                int creation_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+            
+                int today_duration = float_to_days(separate_float(todays_date, 1), separate_float(todays_date, 2), separate_float(todays_date, 3));
+                
+                duration[matches] = today_duration - creation_duration;
+                matches++;
+            }
+        } 
+    }
+    if(matches != 0){
+        printf("A equipa %s , tem %d tarefas em execusao, tendo elas a duracao atual de", defined_team, matches);
+        for(int i = 0; i < matches; i++){
+            printf("%d ", duration[i]);
+        }
+        printf("respectivamente");
+    } else {
+        printf("no matches found");
+    }
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
@@ -824,6 +898,9 @@ int main(){
                 break;
             case(15):
                 number_of_tasks_online_vs_offline();
+                break;
+            case(16):
+                tasks_on_exec();
                 break;
             case(17):
                 return 1;
