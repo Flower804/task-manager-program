@@ -462,13 +462,75 @@ void concluded_after(){
     }
 }
 
+void search_task_by_team(){
+    FILE *file, *teams;
+
+    file = fopen("tarefas.csv", "r");
+    teams = fopen("output/teams.txt", "r");
+
+    int choice;
+    if((file == NULL) || (teams == NULL)){
+        printf("Sorry an error ocurred opening the files");
+        return;
+    }
+    //print contents of the txt file
+    char ch;
+    while((ch = fgetc(teams)) != EOF){
+        putchar(ch);
+    }
+    printf("\nPor favor escolha que equipa pertende ver as tarefas\n");
+    scanf("%d", &choice);
+
+    char line[256];
+    char defined_team[50];
+    int count = 0;
+    rewind(teams);
+    while(fgets(line, sizeof(line), teams) != NULL){
+        if(count == (choice - 1)){
+            strcpy(defined_team, line);
+            defined_team[strcspn(defined_team, "\n")] = 0; //strip new line from the line
+            break;
+        } else {
+            count++;
+        }
+    }
+    printf("%s\n", defined_team);
+    char second_search[10246];
+    int matches = 0;
+    while(fgets(second_search, sizeof(second_search), file)){
+        second_search[strcspn(second_search, "\n")] = 0;
+
+        if(strstr(second_search, defined_team)){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(second_search, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+            if(i == 6){
+                printf("name: %s", cells[0]);
+                matches++;
+            } else {
+                printf("no tasks found");
+            }
+        }
+    }    
+    if(matches == 0){
+        printf("no matches found");
+    }
+
+    fclose(file);
+    fclose(teams);
+}
 
 int choice;
 int main(){
     struct tarefa current_task;
     //while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t13-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
@@ -513,6 +575,9 @@ int main(){
                 concluded_after();
                 break;
             case(12):
+                search_task_by_team();
+                break;
+            case(13):
                 return 1;
                 break;
         }
