@@ -78,7 +78,7 @@ int float_to_days(int days, int months, int year){ //returnts tottal of days
 }
 
 void write_file(tarefa *task){
-    tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "a");
+    tarefas = fopen("tarefas.csv", "a");
 
     char buffer[16] = {0};
 
@@ -124,33 +124,32 @@ void register_new_task(tarefa *task){
     //name
 
     printf("\nPlease give the task a name\n");
-    //scanf("%s", task.name);
-    strcpy(task->name, "test name");
+    scanf("%s", task.name);
+    //strcpy(task->name, "test name");
 
     printf("\nplease list how many resposibles there are\n"); //TODO: change this for file format for teams and stuff
-    //scanf("%d", &resposibles_number);
-    resposibles_number = 1;
+    scanf("%d", &resposibles_number);
+    //resposibles_number = 1;
     if(resposibles_number != 1){
         fputs("Equipa 1: ", tarefas);
     }
     for(int i = 0; i < resposibles_number; i++){
         printf("\nplease write the name of the responsible number %d\n", i);
-         //scanf("%s", responsible);
-        strcpy(responsible, "some beutiful name");
+        scanf("%s", responsible);
+        //strcpy(responsible, "some beutiful name");
         
-        //strcpy(task->responsibles[i], responsible);
+        strcpy(task->responsibles[i], responsible);
     }
 
     printf("\npor favor insira a data limite:\n");
-    //scanf("%f", &task->lim_date);
-    //task->lim_date = le_data();
+    scanf("%f", &task->lim_date);
     
     task->conclusion_date = 0;
 
     printf("\nPlease write a small description of the task\n");
-    //scanf("%s", &task->description);
-    strcpy(task->description, "descirption");
-    
+    scanf("%s", &task->description);
+    //strcpy(task->description, "descirption");
+    write_file(task);
 }
 
 void eliminate_task(int delete_line) {
@@ -357,9 +356,72 @@ void change_person(tarefa *task){ //TODO: this
 }
 
 void set_complete(tarefa *task){
-    printf("please insert what date it is");
-    scanf("%f", task->conclusion_date);
+    FILE *file = fopen("tarefas.csv", "r");
+    if (!file) {
+        printf("Erro: não foi possível abrir o ficheiro.\n");
+        return;
+    }
 
+    char *lines[9];
+    int line_count = 0;
+
+    
+    char buffer[1025];
+    while (fgets(buffer, sizeof(buffer), file) && line_count < 9) {
+        lines[line_count] = strdup(buffer);  
+        printf("%d: %s", line_count, buffer);
+        line_count++;
+    }
+    fclose(file);
+
+    int line_to_edit;
+    printf("\nQual linha deseja alterar? ");
+    scanf("%d", &line_to_edit);
+    getchar();  
+
+    if (line_to_edit <= 0 || line_to_edit >= line_count) {
+        printf("Linha inválida.\n");
+        return;
+    }
+
+    char *line_copy = strdup(lines[line_to_edit]);
+    char *cells[6];
+    int i = 0;
+    char *token = strtok(line_copy, ";");
+    while (token && i < 6) {
+        cells[i++] = token;
+        token = strtok(NULL, ";");
+    }
+
+    if (i != 6) {
+        printf("Erro ao analisar a linha.\n");
+        free(line_copy);
+        return;
+    }
+
+    printf("\nqual a data atual?\n");
+    char new_value[256];
+    printf("Data: ");
+    fgets(new_value, sizeof(new_value), stdin);
+    new_value[strcspn(new_value, "\n")] = 0;  
+
+    cells[4] = new_value;
+
+    char updated_line[1025];
+    snprintf(updated_line, sizeof(updated_line), "%s;%s;%s;%s;%s;%s\n",cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]);
+
+    lines[line_to_edit] = strdup(updated_line);
+
+    file = fopen("tarefas.csv", "w");
+    if (!file) {
+        printf("Erro ao abrir o ficheiro.\n");
+        return;
+    }
+
+    for (int j = 0; j < line_count; j++) {
+        fputs(lines[j], file);
+    }
+    fclose(file);
 }
 
 
