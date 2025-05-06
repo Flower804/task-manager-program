@@ -12,9 +12,6 @@ struct tarefa{
     float lim_date;
     float conclusion_date;
     char description[30];
-
-    int responsible; //idicates if it's a team or not
-    char team[24];
 };
 typedef struct tarefa tarefa;
 
@@ -92,18 +89,6 @@ void write_file(tarefa *task){
     fputs(task->name, tarefas);
     fputs(";", tarefas); //end section
 
-    //TODO: idk if this is importante so I won't erase it just yet :ass: Flower
-
-    //write responsibles
-    //if(task->responsibles != *1){  //in case of multiple responsibles
-    //    char team = strcat("Equipa", task->team);
-    //    
-    //    fputs(team, tarefas);
-    //}
-    //for(int i = 0; i < resposibles_number; i++){
-    //    fputs(task->responsibles[i], tarefas);
-    //    fputs(", ", tarefas);
-    //}
     fputs(";", tarefas);
 
     //write creation date
@@ -168,60 +153,6 @@ void register_new_task(tarefa *task){
     
 }
 
-void change_data(tarefa *task){ //modify "data limite de execusao" "O responsavel" ou a "descicao"
-
-    tarefas = fopen("C:\\Users\\brash\\OneDrive\\Ambiente de Trabalho\\oihn\\tarefas.csv", "a");
-
-    bool loop = true;
-    while(loop){
-        int choice;
-        printf("please select what you want to modify\n");
-        printf("current state: \n");
-        //current state
-        printf("%0.0f\n", task->lim_date);
-        for(int i = 0; i < resposibles_number; i++) {
-            printf("Responsible #%d: %s\n", i + 1, task->responsibles[i]);
-        }
-        printf("%s \n", task->description);
-        //--------------
-        printf("1- limit date | 2- responsible | 3- description | 4- exit");
-        scanf("%d", &choice);
-
-        switch(choice){
-            case(1):
-                printf("\nplease insert new limit date\n");
-                scanf("%f", &task->lim_date);
-                break;
-            case(2):
-                printf("\nplease insert new responsible\n");
-                for(int i = 0; i < resposibles_number; i++){
-                    printf("\nplease write the name of the responsible number %d\n", i);
-                    //scanf("%s", responsible);
-                    strcpy(responsible, "some beutiful name");
-                    strcpy(task->responsibles[i], responsible);
-                }
-                break;
-            case(3):
-                //scanf("%s", &task->description);
-                strcpy(task->description, "descirption");
-                break;
-            case(4):
-                loop = false;
-                break;
-        }
-    }
-}
-
-void change_person(tarefa *task){ //TODO: this
-    printf("please");
-}
-
-void set_complete(tarefa *task){
-    printf("please insert what date it is");
-    scanf("%f", task->conclusion_date);
-
-}
-
 void eliminate_task(int delete_line) {
     FILE *fileptr1, *fileptr2;
     char filename[] = "tarefas.csv";
@@ -264,6 +195,103 @@ void eliminate_task(int delete_line) {
         }
         fclose(fileptr1);
     }
+}
+
+void change_data() {
+    FILE *file = fopen("tarefas.csv", "r");
+    if (!file) {
+        printf("Erro: não foi possível abrir o ficheiro.\n");
+        return;
+    }
+
+    char *lines[9];
+    int line_count = 0;
+
+    char buffer[1025];
+    while (fgets(buffer, sizeof(buffer), file) && line_count < 9) {
+        lines[line_count] = strdup(buffer);
+        printf("%d: %s", line_count, buffer);
+        line_count++;
+    }
+    fclose(file);
+
+    int line_to_edit;
+    printf("\nQual linha deseja alterar? ");
+    scanf("%d", &line_to_edit);
+    getchar();
+
+    if (line_to_edit <= 0 || line_to_edit >= line_count) {
+        printf("Linha inválida.\n");
+        return;
+    }
+
+    char *line_copy = strdup(lines[line_to_edit]);
+    char *cells[6];
+    int i = 0;
+    char *token = strtok(line_copy, ";");
+    while (token && i < 6) {
+        cells[i++] = token;
+        token = strtok(NULL, ";");
+    }
+
+    if (i != 6) {
+        printf("Erro ao analisar a linha.\n");
+        free(line_copy);
+        return;
+    }
+
+    // Show current values
+    printf("\nAtual:\nResponsável: %s\nData limite: %s\nDescrição: %s\n",cells[1], cells[3], cells[5]);
+    int choice;
+    printf("\nO que quer alterar?\n1 - Responsável\n2 - Data limite\n3 - Descrição\nEscolha: ");
+    scanf("%d", &choice);
+    getchar(); 
+
+    char new_value[256];
+    printf("insira o novo valor: ");
+    fgets(new_value, sizeof(new_value), stdin);
+    new_value[strcspn(new_value, "\n")] = 0;
+
+    switch (choice) {
+        case 1:
+            cells[1] = new_value;
+            break;
+        case 2:
+            cells[3] = new_value;
+            break;
+        case 3:
+            cells[5] = new_value;
+            break;
+        default:
+            printf("Escolha inválida.\n");
+            free(line_copy);
+            return;
+    }
+
+    // Build the new line
+    char updated_line[1025];
+    snprintf(updated_line, sizeof(updated_line), "%s;%s;%s;%s;%s;%s\n",cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]);
+
+    lines[line_to_edit] = strdup(updated_line);
+
+    file = fopen("tarefas.csv", "w");
+    if (!file) {
+        printf("Erro ao abrir o ficheiro.\n");
+        return;
+    }
+}
+
+void change_person(tarefa *task){ //TODO: this
+
+    int choice;
+    printf("which task do you wanna work with?");
+    scanf("%d", &choice);
+}
+
+void set_complete(tarefa *task){
+    printf("please insert what date it is");
+    scanf("%f", task->conclusion_date);
+
 }
 
 
@@ -1195,7 +1223,7 @@ int main(){
         printf("what action do you pretend to execute");
         printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\ndeterminar por equipas\n\t14-a duracao media de tarefas\n\t15-numero de tarefas concluidas\n\t16-numero de tarefas em execusao\n\t17-tarefas do ano\n");
         printf("considerando as tarefas originais\n\t18-duracao media das tarefas concluidas\n\t19-a duracao maxima e minima das tarefas\nconsiderando as tarefas eliminadas\n\t20-duracao media das tarefas concluidas\n\t21-a duracao maxima e minima das tarefas");
-        printf("22-stop process");
+        printf("\n\t22-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
