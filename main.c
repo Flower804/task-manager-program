@@ -222,48 +222,50 @@ void set_complete(tarefa *task){
 
 }
 
-void eliminate_task(int delete_line){
+void eliminate_task(int delete_line) {
     FILE *fileptr1, *fileptr2;
-    char filename[40] = "tarefas.csv";
-    char ch;
-    int temp = 1;
+    char filename[] = "tarefas.csv";
+    char temp_filename[] = "replica.c";
+    char line[1024];
+    int current_line = 1;
 
-    //open file in read mode
-    fileptr1 = fopen("tarefas.csv", "r");
-    ch = getc(fileptr1);
-   while (ch != EOF){
-        printf("%c", ch);
-        ch = getc(fileptr1);
+    fileptr1 = fopen(filename, "r");
+    if (!fileptr1) {
+        printf("Erro ao abrir o arquivo original.\n");
+        return;
     }
-    //rewind
-    rewind(fileptr1);
-    //open new file in write mode
-    fileptr2 = fopen("replica.c", "w");
-    ch = 'A';
-    while (ch != EOF){
-        ch = getc(fileptr1);
-        //except the line to be deleted
-        if (temp != delete_line){
-            //copy all lines in file replica.c
-            putc(ch, fileptr2);
-        }
-        if (ch == '\n'){
-            temp++;
-        }
+
+    fileptr2 = fopen(temp_filename, "w");
+    if (!fileptr2) {
+        fclose(fileptr1);
+        printf("Erro ao criar o arquivo temporário.\n");
+        return;
     }
+
+    while (fgets(line, sizeof(line), fileptr1)) {
+        if (current_line != delete_line) {
+            fputs(line, fileptr2);
+        }
+        current_line++;
+    }
+
     fclose(fileptr1);
     fclose(fileptr2);
+
     remove(filename);
-    //rename the file replica.c to original name
-    rename("replica.c", filename);
+    rename(temp_filename, filename);
+
+    // Print updated file
     fileptr1 = fopen(filename, "r");
-    ch = getc(fileptr1);
-    while (ch != EOF){
-        printf("%c", ch);
-        ch = getc(fileptr1);
+    if (fileptr1) {
+        printf("\nArquivo atualizado:\n");
+        while (fgets(line, sizeof(line), fileptr1)) {
+            printf("%s", line);
+        }
+        fclose(fileptr1);
     }
-    fclose(fileptr1);
 }
+
 
 //PESSOAS E EQUIPAS
 void criar_equipas(){
@@ -838,12 +840,126 @@ void tasks_on_exec(){
     }
 }
 
+void delete_by_year(int year) {
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer), "%d", year);
+
+    FILE *file = fopen("tarefas.csv", "r");
+    if (!file) {
+        printf("Erro: ficheiro não encontrado.\n");
+        return;
+    }
+
+    int line_number = 0;
+    int lines_to_delete[1024];  // stores line numbers to delete
+    int delete_count = 0;
+
+    char line[1024];
+    while (fgets(line, sizeof(line), file)) {
+        line[strcspn(line, "\n")] = 0;
+        line_number++;
+
+        if (strstr(line, buffer)) {
+            char line_copy[1024];
+            strcpy(line_copy, line);
+
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(line_copy, ";");
+            while (divisor != NULL && i < 6) {
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if (i == 6 && strstr(cells[2], buffer)) {
+                lines_to_delete[delete_count++] = line_number;
+            }
+        }
+    }
+    fclose(file);
+
+    // Delete lines in reverse order to avoid index shifting
+    for (int i = delete_count - 1; i >= 0; i--) {
+        eliminate_task(lines_to_delete[i]);
+    }
+}
+
+
+void create_year_csv(){
+    int year;
+    printf("De qual ano pertende criar o ficheiro?");
+    scanf("%d", &year);
+
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer), "%d", year);
+
+    FILE *file, *new_file;
+    int line_number = 0;
+    file = fopen("tarefas.csv", "r");
+    
+    char mid_file_name[15] = "";
+    strcat(mid_file_name, "tarefas_de_");
+    strcat(mid_file_name, buffer);
+
+    char new_file_name[15] = "";
+    strcpy(new_file_name, mid_file_name);
+    strcat(new_file_name, ".csv");
+
+    new_file = fopen(new_file_name, "w");
+    fputs("Tarefa;Realizada por;Data de criação;Data limite;Data conclusão;Descrição \n", new_file);
+
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    char line[1024];
+    int lines_to_delete[1024];
+    int counter = 0;
+    while(fgets(line, sizeof(line), file)){
+        char line_to_write[126];
+        strcpy(line_to_write, line);
+        line[strcspn(line, "\n")] = 0;
+        line_number++;
+
+        if(strstr(line, buffer)){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                if(strstr(cells[2], buffer) != NULL){
+                    printf("nome de tarefa: %s | inicio: %s in line %d\n", cells[0], cells[2], line_number);
+                    lines_to_delete[counter] = line_number;
+                    fputs(line_to_write, new_file);
+                    fputs("\n", new_file);
+                    counter++;
+                }
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+    if(counter != 0){
+        delete_by_year(year);
+    }
+
+    fclose(new_file);
+    fclose(file);
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
     //while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\ndeterminar por equipas\n\t14-a duracao media de tarefas\n\t15-numero de tarefas concluidas\n\t16-numero de tarefas em execusao\n\t17-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\ndeterminar por equipas\n\t14-a duracao media de tarefas\n\t15-numero de tarefas concluidas\n\t16-numero de tarefas em execusao\n\t17-tarefas do ano\n\t18-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
@@ -903,6 +1019,9 @@ int main(){
                 tasks_on_exec();
                 break;
             case(17):
+                create_year_csv();
+                break;
+            case(18):
                 return 1;
                 break;
         }
