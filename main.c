@@ -769,7 +769,7 @@ void order_by_urgency(){
         return;
     }
 
-    int lines_in_file = 1;
+    int lines_in_file = -1;
     char ch;
     while(!feof(file)){
         ch = fgetc(file);
@@ -779,7 +779,7 @@ void order_by_urgency(){
     }
 
     printf("%d", lines_in_file);
-    int j = 0;
+    int j = 1;
     char tasks[lines_in_file][256];
     int durations[lines_in_file];
 
@@ -789,6 +789,9 @@ void order_by_urgency(){
     float todays_date;
     printf("por favor insira a data de hoje no formato ddmmaaaa");
     scanf("%f", &todays_date);
+
+    //skip first line of the file
+    fgets(line, sizeof(line), file);
 
     while(fgets(line, sizeof(line), file)){
         line[strcspn(line, "\n")] = 0;
@@ -822,7 +825,7 @@ void order_by_urgency(){
         j++;
     }
     int copy_durations[lines_in_file];
-    for(int i = 0; i < lines_in_file; i++){
+    for(int i = 0; i < (lines_in_file-1); i++){
         durations[i] = copy_durations[i];    
     }
     bubbleSort(durations, lines_in_file);
