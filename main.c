@@ -886,7 +886,7 @@ void delete_by_year(int year) {
 }
 
 
-void create_year_csv(){
+int create_year_csv(){
     int year;
     printf("De qual ano pertende criar o ficheiro?");
     scanf("%d", &year);
@@ -911,12 +911,14 @@ void create_year_csv(){
 
     if(!file){
         printf("error: file not found");
-        return;
+        return -1;
     }
 
     char line[1024];
     int lines_to_delete[1024];
     int counter = 0;
+    //skip writing header
+    fgets(line, sizeof(line), file);
     while(fgets(line, sizeof(line), file)){
         char line_to_write[126];
         strcpy(line_to_write, line);
@@ -938,7 +940,6 @@ void create_year_csv(){
                     printf("nome de tarefa: %s | inicio: %s in line %d\n", cells[0], cells[2], line_number);
                     lines_to_delete[counter] = line_number;
                     fputs(line_to_write, new_file);
-                    fputs("\n", new_file);
                     counter++;
                 }
             } else {
@@ -952,14 +953,249 @@ void create_year_csv(){
 
     fclose(new_file);
     fclose(file);
+    return year;
+}
+
+void average_concluded_time_original(){
+    FILE *file;
+    
+    file = fopen("tarefas.csv", "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    float duration = 0;
+    int count = 0;
+    char line[1024];
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                int first_duration, second_duration;
+                float creation_date = strtof(cells[2], NULL);
+                first_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+
+                float end_date = strtof(cells[4], NULL);
+                second_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                duration = duration + (second_duration - first_duration);
+                count++;
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+    float final_duration = duration/count;
+    printf("a duracao media e %0.2f \n", final_duration);
+    fclose(file);
+}
+
+void max_and_min_duration(){
+    FILE *file;
+    
+    file = fopen("tarefas.csv", "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    int max_duration = 0;
+    char max_name[25] = "";
+    char max_owner[25] = "";
+    int min_duration = __INT_MAX__;
+    char min_name[25] = "";
+    char min_owner[25] = "";
+    char line[1024];
+    //skip first line of the file
+    fgets(line, sizeof(line), file);
+
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                int first_duration, second_duration;
+                float creation_date = strtof(cells[2], NULL);
+                first_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+
+                float end_date = strtof(cells[4], NULL);
+                second_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                int duration = second_duration - first_duration;
+                if(duration > max_duration){
+                    max_duration = duration;
+                    strcpy(max_name, cells[0]);
+                    strcpy(max_owner, cells[1]);
+                }
+                if(min_duration > duration){
+                    min_duration = duration;
+                    strcpy(min_name, cells[0]);
+                    strcpy(min_owner, cells[1]);
+                }
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+    printf("A tarefa com duracao maxima teve a duracao de %d, sendo a tarefa %s efectuada por %s \n", max_duration, max_name, max_owner);
+    printf("A tarefa com menor duracao teve a duracao de %d, sendo a tarefa %s efectuada por %s \n", min_duration, min_name, min_owner);
+    fclose(file);
+}
+
+void average_concluded_time_deleted(int year){
+    FILE *file;
+    
+    char str_year[5];
+    sprintf(str_year, "%d", year);
+    char file_name[25] = "";
+    strcat(file_name, "tarefas_de_");
+    strcat(file_name, str_year);
+    strcat(file_name, ".csv");
+    file_name[strcspn(file_name, "\n")] = 0;
+    printf("%s ", file_name);
+
+    file = fopen(file_name, "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    float duration = 0;
+    int count = 0;
+    char line[1024];
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                int first_duration, second_duration;
+                float creation_date = strtof(cells[2], NULL);
+                first_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+
+                float end_date = strtof(cells[4], NULL);
+                second_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                duration = duration + (second_duration - first_duration);
+                count++;
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+    float final_duration = duration/count;
+    printf("a duracao media e %0.2f \n", final_duration);
+    fclose(file);
+}
+
+void max_and_min_duration_deleted(int year){
+    FILE *file;
+    
+    char str_year[5];
+    sprintf(str_year, "%d", year);
+    char file_name[25] = "";
+    strcat(file_name, "tarefas_de_");
+    strcat(file_name, str_year);
+    strcat(file_name, ".csv");
+    file_name[strcspn(file_name, "\n")] = 0;
+    printf("%s ", file_name);
+
+    file = fopen(file_name, "r");
+    if(!file){
+        printf("error: file not found");
+        return;
+    }
+
+    int max_duration = 0;
+    char max_name[25] = "";
+    char max_owner[25] = "";
+    int min_duration = __INT_MAX__;
+    char min_name[25] = "";
+    char min_owner[25] = "";
+    char line[1024];
+    //skip first line of the file
+    fgets(line, sizeof(line), file);
+
+    while(fgets(line, sizeof(line), file)){
+        line[strcspn(line, "\n")] = 0;
+
+        if(!strstr(line, "on-going")){
+            char *cells[6];
+            int i = 0;
+        
+            char *divisor = strtok(line, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+
+            if(i == 6){
+                int first_duration, second_duration;
+                float creation_date = strtof(cells[2], NULL);
+                first_duration = float_to_days(separate_float(creation_date, 1), separate_float(creation_date, 2), separate_float(creation_date, 3));
+
+                float end_date = strtof(cells[4], NULL);
+                second_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                int duration = second_duration - first_duration;
+                if(duration > max_duration){
+                    max_duration = duration;
+                    strcpy(max_name, cells[0]);
+                    strcpy(max_owner, cells[1]);
+                }
+                if(min_duration > duration){
+                    min_duration = duration;
+                    strcpy(min_name, cells[0]);
+                    strcpy(min_owner, cells[1]);
+                }
+            } else {
+                printf("no cells found error");
+            }
+        }
+    }
+    printf("A tarefa com duracao maxima teve a duracao de %d, sendo a tarefa %s efectuada por %s \n", max_duration, max_name, max_owner);
+    printf("A tarefa com menor duracao teve a duracao de %d, sendo a tarefa %s efectuada por %s \n", min_duration, min_name, min_owner);
+    fclose(file);
 }
 
 int choice;
 int main(){
+    int year = 2025;
     struct tarefa current_task;
-    //while(1){
+    bool flag = true; //TODO:change this back to false 
+    while(1){
         printf("what action do you pretend to execute");
-        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\ndeterminar por equipas\n\t14-a duracao media de tarefas\n\t15-numero de tarefas concluidas\n\t16-numero de tarefas em execusao\n\t17-tarefas do ano\n\t18-stop process");
+        printf("Tarefas\n\t1- Registar nova tarfa\n\t2-alterar dados de uma tarefa\n\t3-Definir pessoa\n\t4-concluir tarefa\n\t5-eliminar uma tarefa\nPessoas e equipas\n\t6-criar e guardar equipa\n\t7-alocar equipa\nListar \n\t8-Listar em execusao \n\t9-listar concluidas\n\t10-listar ultrapasadas\n\t11-list tasks that were completed after deadline\n\t12- search tasks by team\n\t\n13-ordenar tarefas por urgencia\ndeterminar por equipas\n\t14-a duracao media de tarefas\n\t15-numero de tarefas concluidas\n\t16-numero de tarefas em execusao\n\t17-tarefas do ano\n");
+        printf("considerando as tarefas originais\n\t18-duracao media das tarefas concluidas\n\t19-a duracao maxima e minima das tarefas\nconsiderando as tarefas eliminadas\n\t20-duracao media das tarefas concluidas\n\t21-a duracao maxima e minima das tarefas");
+        printf("22-stop process");
         scanf("%d", &choice);
 
         //TODO: remove this, only here for debug purposses
@@ -1019,10 +1255,40 @@ int main(){
                 tasks_on_exec();
                 break;
             case(17):
-                create_year_csv();
+                year = create_year_csv();
+                flag = true;
                 break;
             case(18):
+                if(flag){
+                    average_concluded_time_original();
+                } else {
+                    printf("\nsorry to execute this command you must have executed the commnad 17 first\n");
+                }
+                break;
+            case(19):
+                if(flag){
+                    max_and_min_duration();
+                } else {
+                    printf("\n no \n"); //TODO: change this to real message
+                }
+                break;
+            case(20):
+                if(flag){
+                    average_concluded_time_deleted(year);
+                } else {
+                    printf(" ");
+                }
+                break;
+            case(21):
+                if(flag){
+                    max_and_min_duration_deleted(year);
+                } else {
+                    printf("");
+                }
+                break;
+            case(22):
                 return 1;
                 break;
         }
+    }
 }
