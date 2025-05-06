@@ -207,9 +207,10 @@ void change_data() {
     char *lines[9];
     int line_count = 0;
 
+    
     char buffer[1025];
     while (fgets(buffer, sizeof(buffer), file) && line_count < 9) {
-        lines[line_count] = strdup(buffer);
+        lines[line_count] = strdup(buffer);  
         printf("%d: %s", line_count, buffer);
         line_count++;
     }
@@ -218,7 +219,7 @@ void change_data() {
     int line_to_edit;
     printf("\nQual linha deseja alterar? ");
     scanf("%d", &line_to_edit);
-    getchar();
+    getchar();  
 
     if (line_to_edit <= 0 || line_to_edit >= line_count) {
         printf("Linha inválida.\n");
@@ -240,17 +241,18 @@ void change_data() {
         return;
     }
 
-    // Show current values
     printf("\nAtual:\nResponsável: %s\nData limite: %s\nDescrição: %s\n",cells[1], cells[3], cells[5]);
+
+   
     int choice;
-    printf("\nO que quer alterar?\n1 - Responsável\n2 - Data limite\n3 - Descrição\nEscolha: ");
+    printf("\nO que deseja alterar?\n1 - Responsável\n2 - Data limite\n3 - Descrição\nEscolha: ");
     scanf("%d", &choice);
-    getchar(); 
+    getchar();  
 
     char new_value[256];
-    printf("insira o novo valor: ");
+    printf("Novo valor: ");
     fgets(new_value, sizeof(new_value), stdin);
-    new_value[strcspn(new_value, "\n")] = 0;
+    new_value[strcspn(new_value, "\n")] = 0;  
 
     switch (choice) {
         case 1:
@@ -268,7 +270,6 @@ void change_data() {
             return;
     }
 
-    // Build the new line
     char updated_line[1025];
     snprintf(updated_line, sizeof(updated_line), "%s;%s;%s;%s;%s;%s\n",cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]);
 
@@ -279,13 +280,80 @@ void change_data() {
         printf("Erro ao abrir o ficheiro.\n");
         return;
     }
+
+    for (int j = 0; j < line_count; j++) {
+        fputs(lines[j], file);
+    }
+    fclose(file);
 }
 
 void change_person(tarefa *task){ //TODO: this
+    FILE *file = fopen("tarefas.csv", "r");
+    if (!file) {
+        printf("Erro: não foi possível abrir o ficheiro.\n");
+        return;
+    }
 
-    int choice;
-    printf("which task do you wanna work with?");
-    scanf("%d", &choice);
+    char *lines[9];
+    int line_count = 0;
+
+    
+    char buffer[1025];
+    while (fgets(buffer, sizeof(buffer), file) && line_count < 9) {
+        lines[line_count] = strdup(buffer);  
+        printf("%d: %s", line_count, buffer);
+        line_count++;
+    }
+    fclose(file);
+
+    int line_to_edit;
+    printf("\nQual linha deseja alterar? ");
+    scanf("%d", &line_to_edit);
+    getchar();  
+
+    if (line_to_edit <= 0 || line_to_edit >= line_count) {
+        printf("Linha inválida.\n");
+        return;
+    }
+
+    char *line_copy = strdup(lines[line_to_edit]);
+    char *cells[6];
+    int i = 0;
+    char *token = strtok(line_copy, ";");
+    while (token && i < 6) {
+        cells[i++] = token;
+        token = strtok(NULL, ";");
+    }
+
+    if (i != 6) {
+        printf("Erro ao analisar a linha.\n");
+        free(line_copy);
+        return;
+    }
+
+    printf("\nqual o nome do novo responsavel?\n");
+    char new_value[256];
+    printf("Novo valor: ");
+    fgets(new_value, sizeof(new_value), stdin);
+    new_value[strcspn(new_value, "\n")] = 0;  
+
+    cells[1] = new_value;
+
+    char updated_line[1025];
+    snprintf(updated_line, sizeof(updated_line), "%s;%s;%s;%s;%s;%s\n",cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]);
+
+    lines[line_to_edit] = strdup(updated_line);
+
+    file = fopen("tarefas.csv", "w");
+    if (!file) {
+        printf("Erro ao abrir o ficheiro.\n");
+        return;
+    }
+
+    for (int j = 0; j < line_count; j++) {
+        fputs(lines[j], file);
+    }
+    fclose(file);
 }
 
 void set_complete(tarefa *task){
