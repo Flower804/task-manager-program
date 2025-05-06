@@ -124,7 +124,7 @@ void register_new_task(tarefa *task){
     //name
 
     printf("\nPlease give the task a name\n");
-    scanf("%s", task.name);
+    scanf("%s", task->name);
     //strcpy(task->name, "test name");
 
     printf("\nplease list how many resposibles there are\n"); //TODO: change this for file format for teams and stuff
@@ -455,12 +455,13 @@ void criar_equipas(){
         fputs(name, file);
     }
 }
+
 void alocar_equipa(){
     FILE *teams;
 
     teams = fopen("output/teams.txt", "r");
     char ch;
-    int choise, lines; 
+    int choise;
     bool flag = false;
 
     printf("\nQue equipa pertende alocar para a tarefa?\n");
@@ -468,16 +469,72 @@ void alocar_equipa(){
         printf("%c", ch);
         ch = getc(teams);
     }
-    while(!feof(teams)){
-        ch = fgetc(teams);
-        if(ch == '\n'){
-            lines++;
-        }
-    }
-    scanf("%d", &choise);
-    
+    rewind(teams);
 
+    scanf("%d", &choise);
+    getchar(); //clear newline
+    
+    int count = 1;
+    char buffer[250];
+    while(fgets (buffer, sizeof(buffer), teams)){
+        if(count == choise){
+            flag = true;
+            break;
+        }
+        count++;
+    }
+
+    if(flag){
+        printf("choosen team is %s", buffer);
+    }
     fclose(teams);
+
+    FILE *file = fopen("tarefas.csv", "r");
+
+    char *lines[9];
+    int line_count = 0;
+
+    char read_buffer[1025];
+    while (fgets(read_buffer, sizeof(read_buffer), file) && line_count < 9) {
+        lines[line_count] = strdup(read_buffer);  
+        printf("%d: %s", line_count, read_buffer);
+        line_count++;
+    }
+    fclose(file);
+
+    int line_to_edit;
+    printf("\nPara qual tarefa perdente alocar a equipa ");
+    scanf("%d", &line_to_edit);
+    getchar();
+
+    char *line_copy = strdup(lines[line_to_edit]);
+    char *cells[6];
+    int i = 0;
+    char *token = strtok(line_copy, ";");
+    while (token && i < 6) {
+        cells[i++] = token;
+        token = strtok(NULL, ";");
+    }
+
+    buffer[strcspn(buffer, "\n")] = 0;
+
+    cells[1] = strdup(buffer);
+
+    char updated_line[1025];
+    snprintf(updated_line, sizeof(updated_line), "%s;%s;%s;%s;%s;%s\n",cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]);
+
+    lines[line_to_edit] = strdup(updated_line);
+
+    file = fopen("tarefas.csv", "w");
+    if (!file) {
+        printf("Erro ao abrir o ficheiro.\n");
+        return;
+    }
+
+    for (int j = 0; j < line_count; j++) {
+        fputs(lines[j], file);
+    }
+    fclose(file);
 }
 
 
