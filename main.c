@@ -769,7 +769,7 @@ void order_by_urgency(){
         return;
     }
 
-    int lines_in_file = -1;
+    int lines_in_file = 0;
     char ch;
     while(!feof(file)){
         ch = fgetc(file);
@@ -1508,5 +1508,8 @@ int main(){
                 return 1;
                 break;
         }
+    int numero;
+    printf("\npor favor insira um numero para continuar a execucao do codigo\n");
+    scanf("%d", &numero);
     }
 }
