@@ -695,6 +695,75 @@ void average_duration(){
     }
 }
 
+void number_of_tasks_online_vs_offline(){
+    FILE *file, *teams;
+
+    file = fopen("tarefas.csv", "r");
+    teams = fopen("output/teams.txt", "r");
+
+    int choice;
+    if((file == NULL) || (teams == NULL)){
+        printf("Sorry an error ocurred opening the files");
+        return;
+    }
+
+    char ch;
+    while((ch = fgetc(teams)) != EOF){
+        putchar(ch);
+    }
+    printf("\nPor favor escolha que equipa pertende verificar o media de tempo\n");
+    scanf("%d", &choice);
+
+    char line[256];
+    char defined_team[50];
+    int count = 0;
+    rewind(teams);
+    while(fgets(line, sizeof(line), teams) != NULL){
+        if(count == (choice - 1)){
+            strcpy(defined_team, line);
+            defined_team[strcspn(defined_team, "\n")] = 0;
+            break;
+        } else {
+            count++;
+        }
+    }
+
+    char second_search[1024];
+    int matches_after = 0;
+    int matches_before = 0;
+    int duration = 0;
+    while(fgets(second_search, sizeof(second_search), file) != NULL){
+        second_search[strcspn(second_search, "\n")] = 0;
+
+        if(strstr(second_search, defined_team) && !strstr(second_search, "on-going")){
+            char *cells[6];
+            int i = 0;
+
+            char *divisor = strtok(second_search, ";");
+            while(divisor != NULL && i<6){
+                cells[i++] = divisor;
+                divisor = strtok(NULL, ";");
+            }
+            if(i == 6){
+                float end_date = strtof(cells[4], NULL);
+                int concluded_duration = float_to_days(separate_float(end_date, 1), separate_float(end_date, 2), separate_float(end_date, 3));
+
+                float limit_date = strtof(cells[3], NULL);
+                int limit_duration = float_to_days(separate_float(limit_date, 1), separate_float(limit_date, 2), separate_float(limit_date, 3));
+
+                if(limit_duration < concluded_duration){
+                    matches_after++;
+                } else if(limit_duration > concluded_duration){
+                    matches_before++;
+                }
+            }
+        } 
+    }
+    if((matches_after != 0) || (matches_before != 0)){
+        printf("A equipa %s , tem %d tarefas concluidas apos o limite e %d tarefas concluidas antes do limite", defined_team, matches_after, matches_before);
+    }
+}
+
 int choice;
 int main(){
     struct tarefa current_task;
@@ -752,6 +821,9 @@ int main(){
                 break;
             case(14):
                 average_duration();
+                break;
+            case(15):
+                number_of_tasks_online_vs_offline();
                 break;
             case(17):
                 return 1;
